@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <!-- 移动端适配优化：禁止缩放，适配刘海屏 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI 智能手相 & 面相大师 | AI Destiny Master</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background-color: #1a0b2e;
+            color: #e2d8f0;
+            background-image: radial-gradient(circle at 50% 0%, #2d1b4e 0%, #1a0b2e 70%);
+            min-height: 100vh;
+            /* 适配 iOS 安全区域（刘海屏/灵动岛） */
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .mystic-border {
+            border: 1px solid rgba(216, 180, 254, 0.3);
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+        }
+
+        .upload-box {
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px dashed rgba(168, 85, 247, 0.4);
+        }
+
+        .upload-box:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #d8b4fe;
+            transform: translateY(-2px);
+        }
+
+        .upload-box.has-image {
+            border-style: solid;
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .glow-btn {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .glow-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(219, 39, 119, 0.5);
+        }
+
+        .glow-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* Tab Styles */
+        .tab-btn {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+            opacity: 0.6;
+        }
+        .tab-btn.active {
+            opacity: 1;
+            border-bottom-color: #d8b4fe;
+            color: #fff;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .markdown-body h1, .markdown-body h2, .markdown-body h3 {
+            color: #d8b4fe;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-weight: bold;
+        }
+        .markdown-body p {
+            margin-bottom: 1em;
+            line-height: 1.8;
+            color: #e2d8f0;
+        }
+        .markdown-body strong {
+            color: #f0abfc;
+        }
+        
+        .crystal-ball {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(216,180,254,0.4), rgba(124,58,237,0.8));
+            border-radius: 50%;
+            box-shadow: 0 0 30px #a855f7, inset 0 0 20px rgba(255,255,255,0.5);
+            margin: 0 auto;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Face Guide Overlay */
+        .face-guide {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 70%;
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 50% 50% 60% 60%;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); box-shadow: 0 0 30px #a855f7; }
+            50% { transform: translateY(-10px); box-shadow: 0 20px 40px #a855f7; }
+        }
+        
+        /* iOS optimizations: 禁止长按图片弹出菜单 */
+        img {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-2 rounded-full border border-purple-500/30 mb-4 bg-purple-900/20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#d8b4fe" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <h1 class="text-3xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-pink-300 mb-2">
+                AI 命理大师
+            </h1>
+            <p class="text-purple-300/60 text-sm md:text-lg">AI Destiny Master · 手相 & 面相</p>
+        </div>
+
+        <!-- Mode Switcher -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-[#130722] p-1 rounded-xl border border-purple-500/30 flex">
+                <button onclick="switchMode('hand')" id="tabHand" class="tab-btn active px-6 py-2 rounded-lg text-purple-200 font-medium flex items-center gap-2">
+                    <span>✋</span> 手相解读
+                </button>
+                <button onclick="switchMode('face')" id="tabFace" class="tab-btn px-6 py-2 rounded-lg text-purple-200 font-medium flex items-center gap-2">
+                    <span>👤</span> 面相解读
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Interface -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Panel: Uploads -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- HAND MODE SECTION -->
+                <div id="handSection" class="space-y-6 transition-opacity duration-300">
+                    <!-- Left Hand -->
+                    <div class="relative group">
+                        <div class="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl opacity-30 group-hover:opacity-75 transition duration-500 blur"></div>
+                        <div class="relative p-4 bg-[#130722] rounded-xl mystic-border text-center">
+                            <h3 class="text-lg font-semibold mb-2 text-purple-200">左手 (先天)</h3>
+                            <div class="upload-box rounded-lg p-4 h-40 flex flex-col items-center justify-center cursor-pointer" id="dropZoneLeft" onclick="document.getElementById('fileLeft').click()">
+                                <input type="file" id="fileLeft" class="hidden" accept="image/*" onchange="handleFileSelect(this, 'previewLeft', 'dropZoneLeft', 'leftHandBase64')">
+                                <div id="previewLeft" class="w-full h-full flex flex-col items-center justify-center">
+                                    <svg class="w-8 h-8 text-purple-400/50 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    <span class="text-xs text-purple-300/70">点击上传</span>
+                                </div>
+                                <img id="imgLeft" class="hidden w-full h-full object-cover rounded-md" alt="Left Hand">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Hand -->
+                    <div class="relative group">
+                        <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl opacity-30 group-hover:opacity-75 transition duration-500 blur"></div>
+                        <div class="relative p-4 bg-[#130722] rounded-xl mystic-border text-center">
+                            <h3 class="text-lg font-semibold mb-2 text-purple-200">右手 (后天)</h3>
+                            <div class="upload-box rounded-lg p-4 h-40 flex flex-col items-center justify-center cursor-pointer" id="dropZoneRight" onclick="document.getElementById('fileRight').click()">
+                                <input type="file" id="fileRight" class="hidden" accept="image/*" onchange="handleFileSelect(this, 'previewRight', 'dropZoneRight', 'rightHandBase64')">
+                                <div id="previewRight" class="w-full h-full flex flex-col items-center justify-center">
+                                    <svg class="w-8 h-8 text-purple-400/50 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                    <span class="text-xs text-purple-300/70">点击上传</span>
+                                </div>
+                                <img id="imgRight" class="hidden w-full h-full object-cover rounded-md" alt="Right Hand">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FACE MODE SECTION -->
+                <div id="faceSection" class="hidden transition-opacity duration-300">
+                    <div class="relative group h-[400px]">
+                        <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl opacity-30 group-hover:opacity-75 transition duration-500 blur"></div>
+                        <div class="relative h-full p-6 bg-[#130722] rounded-xl mystic-border text-center flex flex-col">
+                            <h3 class="text-xl font-semibold mb-4 text-purple-200">面相扫描</h3>
+                            <p class="text-xs text-gray-400 mb-4">请确保五官清晰，无遮挡，光线充足</p>
+                            
+                            <div class="upload-box rounded-lg flex-1 relative overflow-hidden flex flex-col items-center justify-center cursor-pointer" id="dropZoneFace" onclick="document.getElementById('fileFace').click()">
+                                <input type="file" id="fileFace" class="hidden" accept="image/*" onchange="handleFileSelect(this, 'previewFace', 'dropZoneFace', 'faceBase64')">
+                                
+                                <!-- Guide Overlay -->
+                                <div class="face-guide" id="faceGuide"></div>
+                                
+                                <div id="previewFace" class="w-full h-full flex flex-col items-center justify-center z-10">
+                                    <svg class="w-16 h-16 text-purple-400/50 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span class="text-sm text-purple-300/70">点击拍摄/上传自拍</span>
+                                </div>
+                                <img id="imgFace" class="hidden w-full h-full object-cover z-20" alt="Face Preview">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="analyzeBtn" onclick="analyzeDestiny()" class="glow-btn w-full py-4 rounded-xl text-white font-bold text-lg tracking-widest flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span id="btnIcon">🔮</span>
+                    <span id="btnText">开始解读命运</span>
+                </button>
+
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="lg:col-span-2">
+                <div class="h-full min-h-[500px] bg-[#130722]/80 rounded-2xl border border-purple-500/20 p-8 relative overflow-hidden flex flex-col">
+                    
+                    <!-- Default State -->
+                    <div id="resultPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-purple-300/40 p-8 text-center">
+                        <div class="text-6xl mb-4 opacity-20">☯️</div>
+                        <p class="text-xl" id="placeholderText">请上传照片<br>AI 大师将为您揭开命运迷雾</p>
+                    </div>
+
+                    <!-- Loading State -->
+                    <div id="loadingState" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#130722]/90 backdrop-blur-sm">
+                        <div class="crystal-ball mb-8"></div>
+                        <h3 class="text-2xl text-purple-100 font-bold mb-2">大师通灵中...</h3>
+                        <p class="text-purple-300/70 animate-pulse" id="loadingText">正在推演天机...</p>
+                    </div>
+
+                    <!-- Result Content -->
+                    <div id="resultContent" class="hidden relative z-10">
+                        <div class="flex items-center justify-between mb-6 border-b border-purple-500/30 pb-4">
+                            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200" id="resultTitle">大师解读报告</h2>
+                            <button onclick="resetApp()" class="text-sm text-purple-400 hover:text-white transition-colors">重新测试</button>
+                        </div>
+                        <div id="markdownOutput" class="markdown-body text-purple-100 leading-relaxed h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-transparent">
+                            <!-- Markdown content will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-purple-500/40 text-sm">
+            <p>AI 生成结果仅供娱乐参考，相由心生，境随心转。</p>
+            <p class="mt-1">Powered by Google Gemini 2.5 Vision</p>
+        </div>
+
+    </div>
+
+    <script>
+        // State
+        let activeMode = 'hand'; // 'hand' or 'face'
+        let leftHandBase64 = null;
+        let rightHandBase64 = null;
+        let faceBase64 = null;
+
+        function switchMode(mode) {
+            activeMode = mode;
+            
+            // Tab UI
+            document.getElementById('tabHand').classList.toggle('active', mode === 'hand');
+            document.getElementById('tabFace').classList.toggle('active', mode === 'face');
+
+            // Section Visibility
+            const handSec = document.getElementById('handSection');
+            const faceSec = document.getElementById('faceSection');
+            
+            if (mode === 'hand') {
+                handSec.classList.remove('hidden');
+                faceSec.classList.add('hidden');
+                document.getElementById('placeholderText').innerHTML = "请上传手相照片<br>大师为您看掌中乾坤";
+            } else {
+                handSec.classList.add('hidden');
+                faceSec.classList.remove('hidden');
+                document.getElementById('placeholderText').innerHTML = "请上传面相自拍<br>大师为您看三庭五眼";
+            }
+
+            // Reset Result view if needed (optional, here we keep it to allow comparison if user switches back)
+        }
+
+        // Helper: Convert file to Base64
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // Handle File Selection
+        async function handleFileSelect(input, previewId, zoneId, stateVarName) {
+            const file = input.files[0];
+            if (!file) return;
+
+            try {
+                const base64 = await fileToBase64(file);
+                
+                // Show preview
+                const previewDiv = document.getElementById(previewId);
+                const imgElement = previewDiv.nextElementSibling;
+                const zone = document.getElementById(zoneId);
+
+                previewDiv.classList.add('hidden');
+                imgElement.classList.remove('hidden');
+                imgElement.src = base64;
+                zone.classList.add('has-image');
+
+                if (stateVarName === 'faceBase64') {
+                    document.getElementById('faceGuide').style.display = 'none';
+                }
+
+                // Strip prefix for API
+                const base64Data = base64.split(',')[1];
+
+                // Update State
+                if (stateVarName === 'leftHandBase64') leftHandBase64 = base64Data;
+                if (stateVarName === 'rightHandBase64') rightHandBase64 = base64Data;
+                if (stateVarName === 'faceBase64') faceBase64 = base64Data;
+
+            } catch (e) {
+                console.error("Error reading file:", e);
+                alert("图片读取失败，请重试");
+            }
+        }
+
+        // Loading Text Animation
+        let loadingInterval;
+        function startLoadingAnimation(mode) {
+            const handTexts = [
+                "正在观察生命线长度...", "正在分析智慧线走向...", "正在感应感情线波动...", 
+                "正在解读掌丘起伏...", "正在综合阴阳五行...", "天机即将显现..."
+            ];
+            const faceTexts = [
+                "正在分析三庭比例...", "正在观察眉眼气色...", "正在解读鼻准财运...", 
+                "正在推演流年运势...", "正在观摩精气神...", "相由心生，正在解读..."
+            ];
+            
+            const texts = mode === 'hand' ? handTexts : faceTexts;
+            
+            let i = 0;
+            const textEl = document.getElementById('loadingText');
+            textEl.textContent = texts[0];
+            
+            return setInterval(() => {
+                i++;
+                textEl.textContent = texts[i % texts.length];
+            }, 1500);
+        }
+
+        // Main Logic: Call Gemini API
+        async function analyzeDestiny() {
+            // Validation
+            if (activeMode === 'hand' && !leftHandBase64 && !rightHandBase64) {
+                alert("请至少上传一张手相照片。");
+                return;
+            }
+            if (activeMode === 'face' && !faceBase64) {
+                alert("请上传您的面相照片。");
+                return;
+            }
+
+            // UI Updates
+            document.getElementById('analyzeBtn').disabled = true;
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('resultPlaceholder').classList.add('hidden');
+            document.getElementById('resultContent').classList.add('hidden');
+            
+            loadingInterval = startLoadingAnimation(activeMode);
+            
+            // ⚠️⚠️⚠️ 重要：部署前请在此处填入你的 API Key ⚠️⚠️⚠️
+            const apiKey = ""; // Environment will provide this
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            // Construct Parts based on Mode
+            const parts = [];
+            let systemPrompt = "";
+
+            if (activeMode === 'hand') {
+                systemPrompt = `You are a mystical AI Palm Reader (Master Hand Analyst). 
+                Analyze the attached palm images. 
+                If images are not hands, ask for clear photos.
+                Provide a "Palm Reading" report in Simplified Chinese.
+                Structure:
+                1. **总体印象**: Mystical summary.
+                2. **生命线 (健康)**: Vitality analysis.
+                3. **智慧线 (才华)**: Intellect analysis.
+                4. **感情线 (姻缘)**: Love analysis.
+                5. **事业与财运**: Career luck.
+                6. **大师寄语**: Positive advice.
+                Tone: Traditional, supportive, mysterious.`;
+                
+                if (leftHandBase64) parts.push({ inlineData: { mimeType: "image/jpeg", data: leftHandBase64 } });
+                if (rightHandBase64) parts.push({ inlineData: { mimeType: "image/jpeg", data: rightHandBase64 } });
+
+            } else {
+                systemPrompt = `You are a mystical AI Physiognomist (Face Reader/Feng Shui Master). 
+                Analyze the attached face image. 
+                If image is not a face, ask for a clear selfie.
+                Provide a "Face Reading" report in Simplified Chinese.
+                Structure:
+                1. **面相总览**: Analyze the "Three Zones" (三庭 - Upper, Middle, Lower face).
+                2. **五官精批**: 
+                   - Eyes (Intelligence/Spirit)
+                   - Nose (Wealth/Career)
+                   - Mouth (Personality/Relationships)
+                3. **流年运势**: Approximate age and current luck cycle based on face reading rules.
+                4. **性格特征**: Personality traits.
+                5. **大师建议**: Life advice based on physiognomy.
+                Tone: Mystical, traditional (referencing 12 palaces implies depth), yet positive and encouraging.`;
+                
+                parts.push({ inlineData: { mimeType: "image/jpeg", data: faceBase64 } });
+            }
+
+            parts.unshift({ text: systemPrompt });
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: [{ parts: parts }] })
+                });
+
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+                const data = await response.json();
+                const markdownText = data.candidates[0].content.parts[0].text;
+
+                // Display Results
+                clearInterval(loadingInterval);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('resultContent').classList.remove('hidden');
+                
+                // Set Title
+                document.getElementById('resultTitle').textContent = activeMode === 'hand' ? "手相大师解读" : "面相大师解读";
+                
+                // Render Markdown
+                document.getElementById('markdownOutput').innerHTML = marked.parse(markdownText);
+                
+                document.getElementById('analyzeBtn').disabled = false;
+                document.getElementById('btnText').textContent = "再次解读";
+
+            } catch (error) {
+                console.error("Analysis failed:", error);
+                clearInterval(loadingInterval);
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('analyzeBtn').disabled = false;
+                alert("通灵过程受到干扰（网络或 API 错误），请检查 API Key 或稍后重试。");
+            }
+        }
+
+        function resetApp() {
+            // Simple reset: keep mode, clear active images and results
+            if (activeMode === 'hand') {
+                leftHandBase64 = null;
+                rightHandBase64 = null;
+                document.getElementById('fileLeft').value = '';
+                document.getElementById('fileRight').value = '';
+                
+                // Reset Left UI
+                document.getElementById('previewLeft').classList.remove('hidden');
+                document.getElementById('imgLeft').classList.add('hidden');
+                document.getElementById('dropZoneLeft').classList.remove('has-image');
+                
+                // Reset Right UI
+                document.getElementById('previewRight').classList.remove('hidden');
+                document.getElementById('imgRight').classList.add('hidden');
+                document.getElementById('dropZoneRight').classList.remove('has-image');
+            } else {
+                faceBase64 = null;
+                document.getElementById('fileFace').value = '';
+                
+                // Reset Face UI
+                document.getElementById('previewFace').classList.remove('hidden');
+                document.getElementById('imgFace').classList.add('hidden');
+                document.getElementById('dropZoneFace').classList.remove('has-image');
+                document.getElementById('faceGuide').style.display = 'block';
+            }
+
+            document.getElementById('resultContent').classList.add('hidden');
+            document.getElementById('resultPlaceholder').classList.remove('hidden');
+            document.getElementById('btnText').textContent = "开始解读命运";
+        }
+    </script>
+</body>
+</html>
