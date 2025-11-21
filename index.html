@@ -36,6 +36,26 @@
         .face-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 70%; border: 2px dashed rgba(255,255,255,0.2); border-radius: 50% 50% 60% 60%; pointer-events: none; }
         @keyframes float { 0%, 100% { transform: translateY(0); box-shadow: 0 0 30px #a855f7; } 50% { transform: translateY(-10px); box-shadow: 0 20px 40px #a855f7; } }
         img { -webkit-touch-callout: none; -webkit-user-select: none; }
+        /* --- PDF 导出专用样式 (白底黑字) --- */
+        .pdf-print-style {
+            color: #000000 !important;      /* 全局文字变黑 */
+            background-color: #ffffff !important; /* 背景变白 */
+            padding: 20px !important;       /* 加点内边距好看 */
+        }
+        
+        /* 强制覆盖 Markdown 里的标题和加粗颜色 */
+        .pdf-print-style h1, 
+        .pdf-print-style h2, 
+        .pdf-print-style h3, 
+        .pdf-print-style strong {
+            color: #000000 !important; 
+            text-shadow: none !important; /* 去掉发光效果 */
+        }
+        
+        .pdf-print-style p, 
+        .pdf-print-style li {
+            color: #333333 !important; /* 正文用深灰色，更有质感 */
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -121,22 +141,27 @@
                     <div id="resultContent" class="hidden relative z-10 flex flex-col h-full">
                         <div class="flex items-center justify-between mb-6 border-b border-purple-500/30 pb-4 flex-shrink-0">
                             <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200" id="resultTitle">大师解读报告</h2>
-                            
-                            <div class="flex gap-3">
-                                <button onclick="downloadPDF()" class="text-sm text-purple-400 hover:text-green-400 transition-colors flex items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    保存灵签
+
+                            <div class="flex items-center gap-4">
+                                <button onclick="downloadPDF()" class="group relative px-5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full text-white font-bold text-sm shadow-[0_0_15px_rgba(16,185,129,0.4)] hover:shadow-[0_0_25px_rgba(16,185,129,0.6)] hover:scale-105 transition-all duration-300 flex items-center gap-2 overflow-hidden">
+                                    <div class="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 skew-x-12"></div>
+                                    
+                                    <span class="relative z-10 flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        保存灵签
+                                    </span>
                                 </button>
-                                <button onclick="resetApp()" class="text-sm text-purple-400 hover:text-white transition-colors">重新测试</button>
+
+                                <button onclick="resetApp()" class="text-sm text-purple-400 hover:text-white transition-colors border-b border-transparent hover:border-purple-300">
+                                    重新测试
+                                </button>
                             </div>
-                            </div>
+                        </div>
                         
                         <div id="reportContent" class="p-2">
                             <div id="markdownOutput" class="markdown-body text-purple-100 leading-relaxed mb-6"></div>
                         </div>
                         
-                        <div class="pt-4 border-t border-purple-500/20 text-center flex-shrink-0 mt-4">
-                        </div>
                         <!-- Donation Button -->
                         <div class="pt-4 border-t border-purple-500/20 text-center flex-shrink-0 mt-4">
                             <a href="https://buymeacoffee.com/hhlove" target="_blank" class="bmc-btn inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm md:text-base mx-auto">
@@ -297,34 +322,42 @@
         }
 
         function downloadPDF() {
-            const element = document.getElementById('reportContent'); // 只选择文本内容区域
-            
-            // 获取当前时间作为文件名的一部分
+            const element = document.getElementById('reportContent');
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+        
+            // 1. ⏳ 临时加上“白底黑字”的样式类
+            element.classList.add('pdf-print-style');
+        
+            // 获取日期作为文件名
             const date = new Date().toISOString().slice(0,10);
             const filename = `AI_Destiny_Report_${date}.pdf`;
-
-            // 配置 PDF 参数
+        
             const opt = {
-                margin:       [10, 10, 10, 10], // 上右下左边距
+                margin:       10,
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
-                    scale: 2, // 提高清晰度
-                    useCORS: true, // 允许加载跨域图片
-                    backgroundColor: '#130722' // 🔥 关键：保持深色背景，否则文字会看不清
+                    scale: 2, 
+                    useCORS: true,
+                    backgroundColor: '#ffffff' // 🔥 强制设定背景为纯白
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-
-            // 开始生成的时候给用户一点反馈
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⏳ 生成中...';
+        
+            btn.innerHTML = '⏳ 排版中...';
             btn.disabled = true;
-
-            // 生成 PDF
+        
+            // 2. 生成 PDF
             html2pdf().set(opt).from(element).save().then(() => {
-                // 恢复按钮状态
+                // 3. ✅ 生成完毕，移除“白底黑字”样式，恢复网页原貌
+                element.classList.remove('pdf-print-style');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }).catch(err => {
+                console.error(err);
+                // 出错也要恢复样式
+                element.classList.remove('pdf-print-style');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });
