@@ -36,41 +36,51 @@
         .face-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 70%; border: 2px dashed rgba(255,255,255,0.2); border-radius: 50% 50% 60% 60%; pointer-events: none; }
         @keyframes float { 0%, 100% { transform: translateY(0); box-shadow: 0 0 30px #a855f7; } 50% { transform: translateY(-10px); box-shadow: 0 20px 40px #a855f7; } }
         img { -webkit-touch-callout: none; -webkit-user-select: none; }
-        /* --- PDF 导出专用：完美修复版 --- */
+        /* --- PDF 导出专用：终极修复版 --- */
         .destiny-pdf-style {
-            /* 1. 修复截断的关键：强制高度自动，允许内容撑开 */
+            /* 1. 核心修复：强制铺满，取消居中 */
+            position: relative !important;
+            width: 100% !important;
+            max-width: none !important; /* 覆盖 max-w-4xl */
+            margin: 0 !important;       /* 覆盖 mx-auto，消除左边距 */
+            left: 0 !important;
+            
+            /* 2. 高度自动，防止截断 */
             height: auto !important;
             min-height: 100% !important;
-            overflow: visible !important;
             
-            /* 2. 背景设定：使用纯深紫色 */
-            /* 注意：PDF分页时，复杂的渐变容易出现断层，纯色最稳妥且好看 */
+            /* 3. 视觉美化：深紫背景 */
             background-color: #1a0b2e !important; 
-            background-image: none !important; 
-            
-            /* 3. 文字颜色 */
             color: #e2d8f0 !important;
+            padding: 40px !important; /* 保持内部留白 */
             
-            /* 4. 边距调整：去掉多余的顶部边距，防止出现黑条 */
-            margin: 0 !important;
-            padding: 40px !important;
+            /* 4. 字体优化 */
+            font-family: 'Noto Serif SC', serif !important;
+            line-height: 1.8 !important;
         }
 
-        /* 标题样式优化 */
+        /* 标题美化 */
         .destiny-pdf-style h1, 
         .destiny-pdf-style h2, 
         .destiny-pdf-style h3 {
             color: #d8b4fe !important;
             border-bottom: 1px solid rgba(168, 85, 247, 0.3);
-            padding-bottom: 10px;
-            margin-top: 30px !important; /* 保证标题之间有距离 */
+            padding-bottom: 12px;
+            margin-top: 30px !important;
+            margin-bottom: 20px !important;
+            page-break-after: avoid; /* 标题后不要立刻换页 */
         }
 
-        /* 避免标题和段落被分页切断 */
-        .destiny-pdf-style h2,
-        .destiny-pdf-style h3,
-        .destiny-pdf-style p {
-            page-break-inside: avoid; /* 防止文字断在两页中间 */
+        /* 重点文字高亮 */
+        .destiny-pdf-style strong {
+            color: #f0abfc !important;
+            font-weight: bold !important;
+        }
+
+        /* 避免文字被切断 */
+        .destiny-pdf-style p, 
+        .destiny-pdf-style li {
+            page-break-inside: avoid;
         }
     </style>
 </head>
@@ -342,29 +352,33 @@
             const btn = event.currentTarget;
             const originalText = btn.innerHTML;
 
-            // 1. 应用修复后的样式
+            // 1. 应用全屏样式
             element.classList.add('destiny-pdf-style');
 
             const date = new Date().toISOString().slice(0,10);
             const filename = `AI_Destiny_Report_${date}.pdf`;
 
             const opt = {
-                margin:       0, // 0边距，让背景色填满整个PDF
+                margin:       0, 
                 filename:     filename,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true, 
-                    backgroundColor: '#1a0b2e', // 🔥 确保背景底色一致
-                    scrollY: 0, // 修复顶部可能出现的偏移
-                    windowWidth: 1200 // 🔥 强制按电脑宽度渲染，防止手机上排版错乱
+                    backgroundColor: '#1a0b2e',
+                    
+                    // 👇👇👇 关键修复：强制坐标归零 👇👇👇
+                    scrollX: 0,
+                    scrollY: 0,
+                    x: 0,
+                    y: 0,
+                    windowWidth: document.documentElement.scrollWidth, // 捕捉完整宽度
                 },
-                // 👇 新增：智能分页配置，防止文字被切断 👇
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            btn.innerHTML = '🔮 正在通灵...';
+            btn.innerHTML = '🔮 正在结印...';
             btn.disabled = true;
 
             html2pdf().set(opt).from(element).save().then(() => {
@@ -376,7 +390,6 @@
                 element.classList.remove('destiny-pdf-style');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
-                alert("生成PDF时遇到一点小干扰，请重试");
             });
         }
     </script>
