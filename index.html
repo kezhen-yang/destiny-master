@@ -408,9 +408,11 @@
             
             loadingInterval = startLoadingAnimation(activeMode);
             
+            // ⚠️ 这里已经把 Key 删掉了，改用 Vercel 后端代理
             // ⚠️⚠️⚠️ 重要：部署前请在此处填入你的 API Key ⚠️⚠️⚠️
-            const apiKey = "AIzaSyDJ7Ciu1UTwX6di7PhzmlgSbDFyfQ7IoNs"; // Environment will provide this
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            // const apiKey = ""; // Environment will provide this
+
+            // const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             // 商业化钩子
             const closingHook = "最后，请务必以这句话作为结尾：'...限于篇幅，您的流年大运尚有玄机，建议多行善积德...'";
@@ -458,7 +460,12 @@
             parts.unshift({ text: systemPrompt });
 
             try {
-                const response = await fetch(url, {
+                // const response = await fetch(url, {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ contents: [{ parts: parts }] })
+                // });
+                const response = await fetch('/api/analyze', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: parts }] })
