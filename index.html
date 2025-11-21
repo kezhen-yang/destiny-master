@@ -36,25 +36,42 @@
         .face-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 70%; border: 2px dashed rgba(255,255,255,0.2); border-radius: 50% 50% 60% 60%; pointer-events: none; }
         @keyframes float { 0%, 100% { transform: translateY(0); box-shadow: 0 0 30px #a855f7; } 50% { transform: translateY(-10px); box-shadow: 0 20px 40px #a855f7; } }
         img { -webkit-touch-callout: none; -webkit-user-select: none; }
-        /* --- PDF 导出专用样式 (白底黑字) --- */
-        .pdf-print-style {
-            color: #000000 !important;      /* 全局文字变黑 */
-            background-color: #ffffff !important; /* 背景变白 */
-            padding: 20px !important;       /* 加点内边距好看 */
+        /* --- PDF 导出专用：高保真灵符风格 --- */
+        .destiny-card-style {
+            /* 1. 强制深色背景，还原网页氛围 */
+            background-color: #1a0b2e !important; 
+            background-image: radial-gradient(circle at 50% 0%, #4c1d95 0%, #1a0b2e 80%) !important;
+            
+            /* 2. 字体颜色调整 */
+            color: #e9d5ff !important; /* 浅紫色文字 */
+            
+            /* 3. 卡片外形 */
+            padding: 40px !important;   /* 增加内边距，不要贴边 */
+            border: 2px solid #a855f7 !important; /* 紫色边框 */
+            border-radius: 15px !important;
+            
+            /* 4. 字体优化 */
+            font-family: 'Noto Serif SC', serif !important;
         }
-        
-        /* 强制覆盖 Markdown 里的标题和加粗颜色 */
-        .pdf-print-style h1, 
-        .pdf-print-style h2, 
-        .pdf-print-style h3, 
-        .pdf-print-style strong {
-            color: #000000 !important; 
-            text-shadow: none !important; /* 去掉发光效果 */
+
+        /* 标题和重点高亮 */
+        .destiny-card-style h1, 
+        .destiny-card-style h2, 
+        .destiny-card-style h3 {
+            color: #f0abfc !important; /* 粉紫色高亮 */
+            border-bottom: 1px solid rgba(216, 180, 254, 0.3);
+            padding-bottom: 10px;
+            margin-top: 20px;
+            text-shadow: 0 0 10px rgba(216, 180, 254, 0.3); /* 发光效果 */
         }
-        
-        .pdf-print-style p, 
-        .pdf-print-style li {
-            color: #333333 !important; /* 正文用深灰色，更有质感 */
+
+        .destiny-card-style strong {
+            color: #ffeba8 !important; /* 重点用金色/淡黄色 */
+        }
+
+        .destiny-card-style p {
+            line-height: 2 !important; /* 增加行高，显得更优雅 */
+            font-size: 14px !important;
         }
     </style>
 </head>
@@ -325,39 +342,39 @@
             const element = document.getElementById('reportContent');
             const btn = event.currentTarget;
             const originalText = btn.innerHTML;
-        
-            // 1. ⏳ 临时加上“白底黑字”的样式类
-            element.classList.add('pdf-print-style');
-        
-            // 获取日期作为文件名
+
+            // 1. ⏳ 换上“灵符卡片”的华丽皮肤
+            element.classList.add('destiny-card-style');
+
+            // 获取日期
             const date = new Date().toISOString().slice(0,10);
-            const filename = `AI_Destiny_Report_${date}.pdf`;
-        
+            const filename = `AI_Destiny_Master_${date}.pdf`;
+
             const opt = {
                 margin:       10,
                 filename:     filename,
-                image:        { type: 'jpeg', quality: 0.98 },
+                image:        { type: 'jpeg', quality: 1 }, // 最高画质
                 html2canvas:  { 
                     scale: 2, 
                     useCORS: true,
-                    backgroundColor: '#ffffff' // 🔥 强制设定背景为纯白
+                    // 🔥 关键：背景色必须是深色，和 CSS 保持一致
+                    backgroundColor: '#1a0b2e' 
                 },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-        
-            btn.innerHTML = '⏳ 排版中...';
+
+            btn.innerHTML = '🔮 正在结印...'; // 更有趣的加载文案
             btn.disabled = true;
-        
+
             // 2. 生成 PDF
             html2pdf().set(opt).from(element).save().then(() => {
-                // 3. ✅ 生成完毕，移除“白底黑字”样式，恢复网页原貌
-                element.classList.remove('pdf-print-style');
+                // 3. ✅ 恢复原状
+                element.classList.remove('destiny-card-style');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }).catch(err => {
                 console.error(err);
-                // 出错也要恢复样式
-                element.classList.remove('pdf-print-style');
+                element.classList.remove('destiny-card-style');
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             });
