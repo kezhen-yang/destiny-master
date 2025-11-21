@@ -33,9 +33,6 @@
         .markdown-body strong { color: #f0abfc; }
         .crystal-ball { width: 100px; height: 100px; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(216,180,254,0.4), rgba(124,58,237,0.8)); border-radius: 50%; box-shadow: 0 0 30px #a855f7, inset 0 0 20px rgba(255,255,255,0.5); margin: 0 auto; position: relative; animation: float 3s ease-in-out infinite; }
         .face-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 60%; height: 70%; border: 2px dashed rgba(255,255,255,0.2); border-radius: 50% 50% 60% 60%; pointer-events: none; }
-        /* Premium Lock Styles */
-        .premium-lock { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 12px; position: relative; overflow: hidden; }
-        .premium-lock::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, #ffd700, transparent); }
         @keyframes float { 0%, 100% { transform: translateY(0); box-shadow: 0 0 30px #a855f7; } 50% { transform: translateY(-10px); box-shadow: 0 20px 40px #a855f7; } }
         img { -webkit-touch-callout: none; -webkit-user-select: none; }
     </style>
@@ -120,16 +117,14 @@
                         <h3 class="text-2xl text-purple-100 font-bold mb-2">大师通灵中...</h3>
                         <p class="text-purple-300/70 animate-pulse" id="loadingText">正在推演天机...</p>
                     </div>
-                    <!-- Result Content -->
-                    <div id="resultContent" class="hidden relative z-10">
-                        <div class="flex items-center justify-between mb-6 border-b border-purple-500/30 pb-4">
+                    <div id="resultContent" class="hidden relative z-10 flex flex-col h-full">
+                        <div class="flex items-center justify-between mb-6 border-b border-purple-500/30 pb-4 flex-shrink-0">
                             <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200" id="resultTitle">大师解读报告</h2>
                             <button onclick="resetApp()" class="text-sm text-purple-400 hover:text-white transition-colors">重新测试</button>
                         </div>
-                        <div id="markdownOutput" class="markdown-body text-purple-100 leading-relaxed h-[600px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-purple-600 scrollbar-track-transparent">
-                            <!-- Markdown content will be injected here -->
-                        </div>
-                        <!-- Donation Button -->
+                        <div id="markdownOutput" class="markdown-body text-purple-100 leading-relaxed mb-6"></div>
+                        
+                        <!-- Donation Button Only -->
                         <div class="pt-4 border-t border-purple-500/20 text-center flex-shrink-0 mt-4">
                             <a href="https://buymeacoffee.com/hhlove" target="_blank" class="bmc-btn inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm md:text-base mx-auto">
                                 <span>☕</span>
@@ -149,9 +144,8 @@
         let rightHandBase64 = null, rightHandMime = 'image/jpeg';
         let faceBase64 = null, faceMime = 'image/jpeg';
 
-        // ⚠️ Key is securely managed by Vercel backend, but left blank here for safety.
-        // If running locally without backend, put key here.
-        const apiKey = ""; 
+        // ⚠️ 你的 API Key（为了安全起见，这里留空，请填入你有效的 Key）
+        const apiKey = "AIzaSyB4DLlqz8O16D0-WyP29XqMwL_W5ybi3XY"; 
 
         function switchMode(mode) {
             activeMode = mode;
@@ -162,8 +156,7 @@
             document.getElementById('placeholderText').innerHTML = mode === 'hand' ? "请上传手相照片<br>大师为您看掌中乾坤" : "请上传面相自拍<br>大师为您看三庭五眼";
         }
 
-        // 🚀 核心修复：图片压缩函数
-        // 强制将图片长边压缩到 1024px，质量 0.7
+        // 图片压缩函数 (解决 413 Payload Too Large)
         function compressImage(file) {
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -175,7 +168,7 @@
                         const canvas = document.createElement('canvas');
                         let width = img.width;
                         let height = img.height;
-                        const maxSize = 1024; // 限制最大尺寸
+                        const maxSize = 1024; 
 
                         if (width > height) {
                             if (width > maxSize) { height *= maxSize / width; width = maxSize; }
@@ -189,7 +182,6 @@
                         ctx.drawImage(img, 0, 0, width, height);
                         
                         // 输出压缩后的 Base64 (JPEG, 0.7 quality)
-                        // 这将极大减小体积 (通常 < 500KB)
                         resolve(canvas.toDataURL('image/jpeg', 0.7));
                     };
                 };
@@ -200,21 +192,18 @@
             const file = input.files[0];
             if (!file) return;
 
-            // 使用压缩函数处理图片
             const compressedBase64Full = await compressImage(file);
             
-            // Update UI
             document.getElementById(previewId).classList.add('hidden');
             const imgEl = document.getElementById(zoneId).querySelector('img');
             imgEl.classList.remove('hidden');
-            imgEl.src = compressedBase64Full; // 显示压缩后的图
+            imgEl.src = compressedBase64Full;
             document.getElementById(zoneId).classList.add('has-image');
 
             if (type === 'face') document.getElementById('faceGuide').style.display = 'none';
 
-            // 提取 Base64 数据部分
             const base64Data = compressedBase64Full.split(',')[1];
-            const mimeType = 'image/jpeg'; // 压缩后统一为 jpeg
+            const mimeType = 'image/jpeg';
 
             if (type === 'leftHand') { leftHandBase64 = base64Data; leftHandMime = mimeType; }
             if (type === 'rightHand') { rightHandBase64 = base64Data; rightHandMime = mimeType; }
@@ -237,17 +226,12 @@
             document.getElementById('resultPlaceholder').classList.add('hidden');
             document.getElementById('resultContent').classList.add('hidden');
             
-            // Reset Premium UI
-            document.getElementById('lockedContent').classList.remove('hidden');
-            document.getElementById('unlockedContent').classList.add('hidden');
-            document.getElementById('unlockedContent').innerHTML = "";
-            document.getElementById('unlockCode').value = "";
-
             const loadingInterval = startLoadingAnimation();
             
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const closingHook = "最后，请务必以这句话作为结尾：'...限于篇幅，您的流年大运尚有玄机，建议多行善积德...'";
+
             const parts = [];
-            
             let systemPrompt = activeMode === 'hand' 
                 ? `You are a mystical AI Palm Reader. Analyze attached palm images. Provide report in Simplified Chinese. Structure: 1. **总体印象** 2. **生命线** 3. **智慧线** 4. **感情线** 5. **事业与财运** 6. **大师寄语**. Tone: Mystical, supportive. ${closingHook}`
                 : `You are a mystical AI Physiognomist. Analyze attached face image. Provide report in Simplified Chinese. Structure: 1. **面相总览** 2. **五官精批** 3. **流年运势** 4. **性格特征** 5. **大师建议**. Tone: Mystical, traditional. ${closingHook}`;
@@ -262,8 +246,7 @@
             }
 
             try {
-                // 调用后端 API (Vercel Serverless)
-                const response = await fetch('/api/analyze', {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ contents: [{ parts: parts }] })
@@ -279,60 +262,16 @@
                 document.getElementById('resultTitle').textContent = activeMode === 'hand' ? "手相大师解读" : "面相大师解读";
                 document.getElementById('markdownOutput').innerHTML = marked.parse(markdownText);
                 
-                document.getElementById('analyzeBtn').disabled = false;
-                document.getElementById('btnText').textContent = "再次解读";
-
             } catch (error) {
                 console.error("Analysis failed:", error);
                 clearInterval(loadingInterval);
                 document.getElementById('loadingState').classList.add('hidden');
+                alert("通灵过程受到干扰（网络或 API 错误），请检查 API Key 或稍后重试。");
+            } finally {
                 document.getElementById('analyzeBtn').disabled = false;
-                alert("通灵受阻 (可能图片过大或网络问题): " + error.message);
+                document.getElementById('btnText').textContent = "再次解读";
             }
         }
-
-        // async function unlockPremium() {
-        //     const code = document.getElementById('unlockCode').value.trim();
-        //     if (code !== 'VIP888') return alert("兑换码无效，请检查或前往购买。");
-
-        //     document.getElementById('lockedContent').classList.add('hidden');
-        //     document.getElementById('premiumLoading').classList.remove('hidden');
-
-        //     let premiumPrompt = `用户已解锁深度报告。基于刚才的图片，请忽略之前分析，重点深度分析：
-        //     1. **未来 5 年财运趋势**：按年份列出。
-        //     2. **正缘桃花方位**：结合八卦方位。
-        //     3. **具体改运建议**：给出3条具体建议。
-        //     使用 Markdown 格式，标题用 ✨ 修饰，语气肯定神秘。`;
-
-        //     const parts = [{ text: premiumPrompt }];
-        //     if (activeMode === 'hand') {
-        //         if (leftHandBase64) parts.push({ inlineData: { mimeType: leftHandMime, data: leftHandBase64 } });
-        //         if (rightHandBase64) parts.push({ inlineData: { mimeType: rightHandMime, data: rightHandBase64 } });
-        //     } else {
-        //         parts.push({ inlineData: { mimeType: faceMime, data: faceBase64 } });
-        //     }
-
-        //     try {
-        //         // 调用后端 API
-        //         const response = await fetch('/api/analyze', {
-        //             method: 'POST',
-        //             headers: { 'Content-Type': 'application/json' },
-        //             body: JSON.stringify({ contents: [{ parts: parts }] })
-        //         });
-        //         const data = await response.json();
-        //         const text = data.candidates[0].content.parts[0].text;
-
-        //         document.getElementById('premiumLoading').classList.add('hidden');
-        //         const unlockedDiv = document.getElementById('unlockedContent');
-        //         unlockedDiv.classList.remove('hidden');
-        //         unlockedDiv.innerHTML = marked.parse(text);
-        //     } catch (error) {
-        //         console.error(error);
-        //         alert("解锁失败，请重试");
-        //         document.getElementById('premiumLoading').classList.add('hidden');
-        //         document.getElementById('lockedContent').classList.remove('hidden');
-        //     }
-        // }
 
         function resetApp() {
             location.reload();
