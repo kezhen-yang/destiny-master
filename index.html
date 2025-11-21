@@ -141,6 +141,12 @@
 </head>
 <body class="p-4 md:p-8">
 
+    <!-- Background Music (Hidden) -->
+    <!-- 使用了神秘氛围音乐，点击按钮时触发播放 -->
+    <audio id="bgMusic" loop>
+        <source src="https://cdn.pixabay.com/download/audio/2022/10/28/audio_b8c09b30d6.mp3?filename=space-atmospheric-background-124059.mp3" type="audio/mpeg">
+    </audio>
+
     <div class="max-w-4xl mx-auto">
         
         <!-- Header -->
@@ -400,6 +406,11 @@
                 return;
             }
 
+            // 🎵 START MUSIC - 用户点击按钮时播放音乐
+            const bgMusic = document.getElementById('bgMusic');
+            bgMusic.volume = 0.5; // 设置音量为 50%
+            bgMusic.play().catch(e => console.log("Audio autoplay prevented", e));
+
             // UI Updates
             document.getElementById('analyzeBtn').disabled = true;
             document.getElementById('loadingState').classList.remove('hidden');
@@ -493,6 +504,11 @@
         }
 
         function resetApp() {
+            // Stop Music on Reset
+            const bgMusic = document.getElementById('bgMusic');
+            bgMusic.pause();
+            bgMusic.currentTime = 0;
+
             // Simple reset: keep mode, clear active images and results
             if (activeMode === 'hand') {
                 leftHandBase64 = null;
