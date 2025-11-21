@@ -141,12 +141,6 @@
 </head>
 <body class="p-4 md:p-8">
 
-    <!-- Background Music (Hidden) -->
-    <!-- 使用 Internet Archive 的永久链接，更稳定。增加 preload 属性预加载 -->
-    <audio id="bgMusic" loop preload="auto">
-        <source src="https://ia800304.us.archive.org/27/items/Ghost_Processional_Archive/Ghost_Processional.mp3" type="audio/mpeg">
-    </audio>
-
     <div class="max-w-4xl mx-auto">
         
         <!-- Header -->
@@ -300,9 +294,6 @@
         let rightHandBase64 = null;
         let faceBase64 = null;
 
-        // ⚠️⚠️⚠️ 重要：部署前请在此处填入你的 API Key ⚠️⚠️⚠️
-        const apiKey = "AIzaSyB4DLlqz8O16D0-WyP29XqMwL_W5ybi3XY"; // Environment will provide this
-
         function switchMode(mode) {
             activeMode = mode;
             
@@ -409,17 +400,6 @@
                 return;
             }
 
-            // 🎵 START MUSIC - 尝试播放背景音乐
-            const bgMusic = document.getElementById('bgMusic');
-            if (bgMusic) {
-                bgMusic.volume = 0.5; // 50% 音量
-                // 尝试播放，catch 用于捕获错误（如浏览器阻止）但不做任何反应（Silent Fail）
-                bgMusic.play().catch(e => {
-                    console.log("Background music play failed (likely autoplay policy):", e);
-                    // 这里什么都不做，保持静默
-                });
-            }
-
             // UI Updates
             document.getElementById('analyzeBtn').disabled = true;
             document.getElementById('loadingState').classList.remove('hidden');
@@ -428,6 +408,8 @@
             
             loadingInterval = startLoadingAnimation(activeMode);
             
+            // ⚠️⚠️⚠️ 重要：部署前请在此处填入你的 API Key ⚠️⚠️⚠️
+            const apiKey = "AIzaSyB4DLlqz8O16D0-WyP29XqMwL_W5ybi3XY"; // Environment will provide this
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             // 商业化钩子
@@ -511,13 +493,6 @@
         }
 
         function resetApp() {
-            // Stop Music on Reset
-            const bgMusic = document.getElementById('bgMusic');
-            if(bgMusic) {
-                bgMusic.pause();
-                bgMusic.currentTime = 0;
-            }
-
             // Simple reset: keep mode, clear active images and results
             if (activeMode === 'hand') {
                 leftHandBase64 = null;
