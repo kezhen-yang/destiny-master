@@ -6,6 +6,7 @@
     <title>AI 智能手相 & 面相大师 | AI Destiny Master</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -120,17 +121,22 @@
                     <div id="resultContent" class="hidden relative z-10 flex flex-col h-full">
                         <div class="flex items-center justify-between mb-6 border-b border-purple-500/30 pb-4 flex-shrink-0">
                             <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200" id="resultTitle">大师解读报告</h2>
-                            <button onclick="resetApp()" class="text-sm text-purple-400 hover:text-white transition-colors">重新测试</button>
-                        </div>
-                        <div id="markdownOutput" class="markdown-body text-purple-100 leading-relaxed mb-6"></div>
+                            
+                            <div class="flex gap-3">
+                                <button onclick="downloadPDF()" class="text-sm text-purple-400 hover:text-green-400 transition-colors flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    保存灵签
+                                </button>
+                                <button onclick="resetApp()" class="text-sm text-purple-400 hover:text-white transition-colors">重新测试</button>
+                            </div>
+                            </div>
                         
-                        <!-- Simple Donation Button -->
-                        <div class="pt-4 border-t border-purple-500/20 text-center flex-shrink-0 mt-4">
-                            <a href="https://buymeacoffee.com/hhlove" target="_blank" class="bmc-btn inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm md:text-base mx-auto">
-                                <span>☕</span>
-                                <span>觉得准？请大师喝杯咖啡，积累功德 🙏</span>
-                            </a>
+                        <div id="reportContent" class="p-2">
+                            <div id="markdownOutput" class="markdown-body text-purple-100 leading-relaxed mb-6"></div>
                         </div>
+                        
+                        <div class="pt-4 border-t border-purple-500/20 text-center flex-shrink-0 mt-4">
+                           </div>
                     </div>
                 </div>
             </div>
@@ -281,6 +287,40 @@
 
         function resetApp() {
             location.reload();
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('reportContent'); // 只选择文本内容区域
+            
+            // 获取当前时间作为文件名的一部分
+            const date = new Date().toISOString().slice(0,10);
+            const filename = `AI_Destiny_Report_${date}.pdf`;
+
+            // 配置 PDF 参数
+            const opt = {
+                margin:       [10, 10, 10, 10], // 上右下左边距
+                filename:     filename,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, // 提高清晰度
+                    useCORS: true, // 允许加载跨域图片
+                    backgroundColor: '#130722' // 🔥 关键：保持深色背景，否则文字会看不清
+                },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // 开始生成的时候给用户一点反馈
+            const btn = event.currentTarget;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ 生成中...';
+            btn.disabled = true;
+
+            // 生成 PDF
+            html2pdf().set(opt).from(element).save().then(() => {
+                // 恢复按钮状态
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            });
         }
     </script>
 </body>
