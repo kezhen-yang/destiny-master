@@ -301,10 +301,35 @@
             const closingHook = "最后，请务必以这句话作为结尾：'...限于篇幅，您的流年大运尚有玄机，建议多行善积德...'";
 
             const parts = [];
-            let systemPrompt = activeMode === 'hand' 
-                ? `You are a mystical AI Palm Reader. Analyze attached palm images. Provide report in Simplified Chinese. Structure: 1. **总体印象** 2. **生命线** 3. **智慧线** 4. **感情线** 5. **事业与财运** 6. **大师寄语**. Tone: Mystical, supportive. ${closingHook}`
-                : `You are a mystical AI Physiognomist. Analyze attached face image. Provide report in Simplified Chinese. Structure: 1. **面相总览** 2. **五官精批** 3. **流年运势** 4. **性格特征** 5. **大师建议**. Tone: Mystical, traditional. ${closingHook}`;
+            // let systemPrompt = activeMode === 'hand' 
+            //     ? `You are a mystical AI Palm Reader. Analyze attached palm images. Provide report in Simplified Chinese. Structure: 1. **总体印象** 2. **生命线** 3. **智慧线** 4. **感情线** 5. **事业与财运** 6. **大师寄语**. Tone: Mystical, supportive. ${closingHook}`
+            //     : `You are a mystical AI Physiognomist. Analyze attached face image. Provide report in Simplified Chinese. Structure: 1. **面相总览** 2. **五官精批** 3. **流年运势** 4. **性格特征** 5. **大师建议**. Tone: Mystical, traditional. ${closingHook}`;
 
+
+            let systemPrompt = activeMode === 'hand' 
+                ? `You are a mystical AI Palm Reader. Analyze the attached palm images. 
+                Start by identifying the **Hand Type** (Earth/Fire/Air/Water) and any special marks like **Simian Line** (断掌) or **川字掌**.
+                Then provide a report in Simplified Chinese. 
+                Structure:
+                1. **手型与定格**: [Identify Hand Type & Major Marks]
+                2. **总体印象**: Mystical summary.
+                3. **生命线**: Vitality analysis.
+                4. **智慧线**: Intellect analysis.
+                5. **感情线**: Love analysis.
+                6. **事业与财运**: Career luck.
+                7. **大师寄语**: Positive advice.
+                Tone: Mystical, supportive. ${closingHook}`
+                : `You are a mystical AI Physiognomist. Analyze the attached face image.
+                Start by identifying the **Face Shape** (Gold/Wood/Water/Fire/Earth) and special features like **Sanpaku Eyes** (三白眼), **Peach Blossom Eyes** (桃花眼).
+                Then provide a report in Simplified Chinese.
+                Structure:
+                1. **面相格局**: [Identify Face Shape & Special Features]
+                2. **面相总览**: Analyze the "Three Zones".
+                3. **五官精批**: Eyes, Nose, Mouth.
+                4. **流年运势**: Current luck cycle.
+                5. **性格特征**: Personality.
+                6. **大师建议**: Life advice.
+                Tone: Mystical, traditional. ${closingHook}`;
             parts.push({ text: systemPrompt });
 
             if (activeMode === 'hand') {
